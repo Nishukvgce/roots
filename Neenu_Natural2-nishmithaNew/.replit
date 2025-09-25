@@ -1,0 +1,76 @@
+modules = ["nodejs-20", "web"]
+run = "npm start"
+
+[nix]
+channel = "stable-25_05"
+
+[deployment]
+run = ["npm", "run", "serve"]
+deploymentTarget = "autoscale"
+build = ["npm", "run", "build"]
+
+[[ports]]
+localPort = 4028
+externalPort = 3000
+
+[[ports]]
+localPort = 4173
+externalPort = 80
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Run"
+author = 46890672
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run start"
+
+[[workflows.workflow]]
+name = "Run App"
+author = 46890672
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run start"
+
+[[workflows.workflow]]
+name = "Start Development Server"
+author = 46893987
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm start"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "React App"
+
+[[workflows.workflow]]
+name = "React App"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm start"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[agent]
+expertMode = true

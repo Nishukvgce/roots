@@ -147,7 +147,7 @@ const ProductManagement = () => {
   };
 
   const handleDeleteProduct = async (productId) => {
-    const confirmMessage = 'Are you sure you want to delete this product? If this product is in any cart or has been ordered, it cannot be permanently deleted.';
+    const confirmMessage = 'Are you sure you want to delete this product? This will permanently remove the product and all its related data (cart items, order history, wishlist entries).';
     
     if (window.confirm(confirmMessage)) {
       try {
@@ -158,22 +158,12 @@ const ProductManagement = () => {
       } catch (error) {
         console.error('Error deleting product:', error);
         
-        // Handle specific error types
-        if (error.message?.includes('foreign key constraint') || error.message?.includes('Cannot delete or update a parent row')) {
-          // Offer soft delete as alternative
-          const softDeleteConfirm = window.confirm('Cannot permanently delete this product because it is referenced in carts or orders. Would you like to mark it as inactive instead? (This will hide it from customers but keep it for historical records)');
-          
-          if (softDeleteConfirm) {
-            try {
-              await dataService.updateProduct(productId, { inStock: false, isActive: false });
-              console.log('Product marked as inactive:', productId);
-              await loadProducts();
-            } catch (updateError) {
-              alert('Failed to mark product as inactive: ' + updateError.message);
-            }
-          }
-        } else if (error.message?.includes('Internal Server Error')) {
+        // Show user-friendly error message
+        if (error.message?.includes('Internal Server Error')) {
           alert('Server error occurred while deleting the product. Please try again or contact support.');
+        } else if (error.message?.includes('404')) {
+          alert('Product not found. It may have already been deleted.');
+          await loadProducts(); // Refresh the list
         } else {
           alert('Failed to delete product: ' + error.message);
         }

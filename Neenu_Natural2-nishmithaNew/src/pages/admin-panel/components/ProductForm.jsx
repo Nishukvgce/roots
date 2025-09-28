@@ -45,8 +45,8 @@ const ProductForm = ({ product, onSave, onCancel }) => {
         subcategory: product.subcategory || '',
         weight: product.weight || '',
         stockQuantity: product.stockQuantity ? product.stockQuantity.toString() : '',
-        ingredients: Array.isArray(product.ingredients) ? product.ingredients.join(', ') : '',
-        benefits: Array.isArray(product.benefits) ? product.benefits.join(', ') : '',
+        ingredients: product.ingredients || '',
+        benefits: product.benefits || '',
         inStock: typeof product.inStock === 'boolean' ? product.inStock : true
       });
       // Keep the original image URL for preview/preserve during update
@@ -267,17 +267,20 @@ const ProductForm = ({ product, onSave, onCancel }) => {
 
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">
-              Description *
+              Description * (You can include features here)
             </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleChange}
               required
-              rows={3}
+              rows={5}
               className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground"
-              placeholder="Enter product description"
+              placeholder="Enter product description and features. You can add 'Key Features:' followed by your feature list."
             />
+            <p className="text-xs text-muted-foreground mt-1">
+              Tip: Add features by writing "Key Features:" followed by your features in separate lines
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

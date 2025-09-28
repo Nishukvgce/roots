@@ -1,13 +1,12 @@
 package com.eduprajna.dto;
 
-import com.eduprajna.entity.Order;
-import com.eduprajna.entity.OrderItem;
-import com.eduprajna.entity.ShippingSnapshot;
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.eduprajna.entity.Order;
+import com.eduprajna.entity.ShippingSnapshot;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 /**
  * Data Transfer Object for Order entity

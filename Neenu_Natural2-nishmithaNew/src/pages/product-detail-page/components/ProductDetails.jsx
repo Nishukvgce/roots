@@ -7,7 +7,7 @@ const ProductDetails = ({ product }) => {
   const tabs = [
     { id: 'description', label: 'Description', icon: 'FileText' },
     { id: 'ingredients', label: 'Ingredients', icon: 'List' },
-    { id: 'nutrition', label: 'Nutrition', icon: 'Activity' },
+    { id: 'benefits', label: 'Benefits', icon: 'Star' },
     { id: 'shipping', label: 'Shipping', icon: 'Truck' }
   ];
 
@@ -37,15 +37,19 @@ const ProductDetails = ({ product }) => {
               Product Description
             </h3>
             <div className="font-body text-muted-foreground space-y-3">
-              <p>{product?.description}</p>
-              <div className="space-y-2">
-                <h4 className="font-medium text-foreground">Key Features:</h4>
-                <ul className="list-disc list-inside space-y-1">
-                  {product?.features?.map((feature, index) => (
-                    <li key={index}>{feature}</li>
-                  ))}
-                </ul>
+              <div className="whitespace-pre-line">
+                {product?.description || 'No description available.'}
               </div>
+              {product?.features && product?.features.length > 0 && (
+                <div className="space-y-2 mt-4">
+                  <h4 className="font-medium text-foreground">Key Features:</h4>
+                  <ul className="list-disc list-inside space-y-1">
+                    {product?.features?.map((feature, index) => (
+                      <li key={index}>{feature}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -56,13 +60,10 @@ const ProductDetails = ({ product }) => {
               Ingredients
             </h3>
             <div className="space-y-3">
-              <p className="font-body text-muted-foreground">
-                {product?.ingredients?.description}
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {product?.ingredients?.primary && product?.ingredients?.primary.length > 0 ? (
                 <div>
                   <h4 className="font-body font-medium text-foreground mb-2">
-                    Primary Ingredients:
+                    Ingredients:
                   </h4>
                   <ul className="space-y-1">
                     {product?.ingredients?.primary?.map((ingredient, index) => (
@@ -72,44 +73,35 @@ const ProductDetails = ({ product }) => {
                     ))}
                   </ul>
                 </div>
-                <div>
-                  <h4 className="font-body font-medium text-foreground mb-2">
-                    Spices & Seasonings:
-                  </h4>
-                  <ul className="space-y-1">
-                    {product?.ingredients?.spices?.map((spice, index) => (
-                      <li key={index} className="font-caption text-sm text-muted-foreground">
-                        • {spice}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
+              ) : (
+                <p className="font-body text-muted-foreground">
+                  Ingredient information not available.
+                </p>
+              )}
             </div>
           </div>
         )}
 
-        {activeTab === 'nutrition' && (
+        {activeTab === 'benefits' && (
           <div className="space-y-4">
             <h3 className="font-heading font-semibold text-lg text-foreground">
-              Nutritional Information
+              Benefits
             </h3>
-            <div className="bg-muted/50 rounded-lg p-4">
-              <p className="font-caption text-sm text-muted-foreground mb-4">
-                Per 100g serving
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                {Object.entries(product?.nutrition)?.map(([key, value]) => (
-                  <div key={key} className="flex justify-between">
-                    <span className="font-body text-foreground capitalize">
-                      {key?.replace(/([A-Z])/g, ' $1')?.trim()}:
-                    </span>
-                    <span className="font-data font-medium text-foreground">
-                      {value}
-                    </span>
-                  </div>
-                ))}
-              </div>
+            <div className="space-y-3">
+              {product?.benefits && product?.benefits.length > 0 ? (
+                <ul className="space-y-2">
+                  {product?.benefits?.map((benefit, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span className="font-body text-muted-foreground">{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="font-body text-muted-foreground">
+                  Benefit information not available.
+                </p>
+              )}
             </div>
           </div>
         )}

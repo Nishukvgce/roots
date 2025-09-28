@@ -125,12 +125,60 @@ const ProductDetailPage = () => {
             }
           ],
           badges: productData?.badges || [],
-          features: productData?.features || [],
-          ingredients: productData?.ingredients || {
-            description: "Ingredient information not available.",
-            primary: [],
-            spices: []
-          },
+          // Parse features from description - everything after "Key Features:" or similar
+          features: (() => {
+            if (productData?.features && Array.isArray(productData.features)) {
+              return productData.features;
+            }
+            // Try to extract features from description
+            const desc = productData?.description || '';
+            const featuresMatch = desc.match(/(?:key features?|features?):\s*([\s\S]*?)(?:\n\n|$)/i);
+            if (featuresMatch) {
+              return featuresMatch[1]
+                .split(/\n|\*|•|-/)
+                .map(f => f.trim())
+                .filter(f => f && f.length > 0);
+            }
+            return [];
+          })(),
+          
+          // Parse ingredients from backend string format
+          ingredients: (() => {
+            const ingredientsStr = productData?.ingredients || '';
+            if (!ingredientsStr || typeof ingredientsStr !== 'string') {
+              return {
+                description: "Ingredient information not available.",
+                primary: [],
+                spices: []
+              };
+            }
+            
+            // Parse comma-separated ingredients
+            const ingredientList = ingredientsStr
+              .split(',')
+              .map(item => item.trim())
+              .filter(item => item.length > 0);
+            
+            return {
+              description: ingredientsStr,
+              primary: ingredientList,
+              spices: [] // Keep empty as admin doesn't separate spices
+            };
+          })(),
+          
+          // Parse benefits from backend string format  
+          benefits: (() => {
+            const benefitsStr = productData?.benefits || '';
+            if (!benefitsStr || typeof benefitsStr !== 'string') {
+              return [];
+            }
+            
+            // Parse comma-separated benefits
+            return benefitsStr
+              .split(',')
+              .map(item => item.trim())
+              .filter(item => item.length > 0);
+          })(),
           nutrition: productData?.nutrition || {},
           rating: productData?.rating || productData?.ratingValue || 0,
           reviewCount: productData?.reviewCount || 0,

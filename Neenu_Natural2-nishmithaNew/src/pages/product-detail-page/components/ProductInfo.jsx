@@ -41,9 +41,9 @@ const ProductInfo = ({ product, onAddToCart, onAddToWishlist, isInWishlist }) =>
       id: product?.id,
       productId: product?.id,
       name: product?.name,
-      price: selectedVariant?.price ?? product?.price,
-      originalPrice: selectedVariant?.originalPrice ?? product?.originalPrice ?? (selectedVariant?.price ?? product?.price),
-      image: product?.imageUrl || product?.image,
+      price: selectedVariant?.price ?? product?.variants?.[0]?.price ?? 0,
+      originalPrice: selectedVariant?.originalPrice ?? product?.variants?.[0]?.originalPrice ?? selectedVariant?.price ?? product?.variants?.[0]?.price ?? 0,
+      image: product?.images?.[0] || product?.imageUrl || product?.image,
       stockQuantity: availableStock,
       variantId: selectedVariant?.id,
       quantity: quantity
@@ -69,6 +69,14 @@ const ProductInfo = ({ product, onAddToCart, onAddToWishlist, isInWishlist }) =>
         <p className="font-body text-muted-foreground">
           {product?.shortDescription}
         </p>
+      </div>
+
+      {/* Stock Status */}
+      <div className="flex items-center gap-2">
+        <div className={`w-2 h-2 rounded-full ${inStock ? 'bg-success' : 'bg-destructive'}`}></div>
+        <span className={`text-sm font-medium ${inStock ? 'text-success' : 'text-destructive'}`}>
+          {inStock ? `In Stock (${availableStock} units available)` : 'Out of Stock'}
+        </span>
       </div>
       {/* Product Badges */}
       <div className="flex flex-wrap gap-2">

@@ -6,12 +6,6 @@ import Button from '../../../components/ui/Button';
 const DashboardOverview = ({ user, recentOrders, loyaltyPoints, wishlistCount }) => {
   const quickActions = [
     {
-      title: 'Track Order',
-      description: 'Check your order status',
-      icon: 'Truck',
-      action: 'orders'
-    },
-    {
       title: 'Reorder',
       description: 'Buy previous items',
       icon: 'RotateCcw',
@@ -171,9 +165,6 @@ const DashboardOverview = ({ user, recentOrders, loyaltyPoints, wishlistCount })
                   {order?.items?.[0]?.name}
                   {order?.items?.length > 1 && ` +${order?.items?.length - 1} more`}
                 </p>
-                <Button variant="outline" size="sm">
-                  Track Order
-                </Button>
               </div>
             </div>
           ))}

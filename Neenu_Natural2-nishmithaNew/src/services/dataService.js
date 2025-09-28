@@ -79,15 +79,18 @@ const dataService = {
   // Add a new product to backend
   async addProduct(formData, isFormData = false) {
     try {
-      const res = await fetch('http://localhost:8080/api/admin/products', {
-        method: 'POST',
-        body: formData,
-      });
-      if (!res.ok) {
-        const error = await res.text();
-        throw new Error(error || 'Failed to add product');
+      if (isFormData) {
+        // Use apiClient for FormData with proper headers
+        const res = await apiClient.post('/admin/products', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        return res.data;
+      } else {
+        // Use productApi for regular JSON data
+        return await productApi.add(formData);
       }
-      return await res.json();
     } catch (error) {
       console.error('Error adding product:', error);
       throw error;
@@ -108,20 +111,25 @@ const dataService = {
   // Update an existing product in backend
   async updateProduct(productId, productData) {
     try {
-      const res = await fetch(`http://localhost:8080/api/admin/products/${productId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productData),
-      });
-      if (!res.ok) {
-        const error = await res.text();
-        throw new Error(error || 'Failed to update product');
-      }
-      return await res.json();
+      return await productApi.update(productId, productData);
     } catch (error) {
       console.error('Error updating product:', error);
+      throw error;
+    }
+  },
+
+  // Update an existing product with image in backend
+  async updateProductWithImage(productId, formData) {
+    try {
+      // Use apiClient for FormData with proper headers
+      const res = await apiClient.put(`/admin/products/${productId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return res.data;
+    } catch (error) {
+      console.error('Error updating product with image:', error);
       throw error;
     }
   },
@@ -129,13 +137,7 @@ const dataService = {
   // Delete a product in backend (also deletes its image file server-side)
   async deleteProduct(productId) {
     try {
-      const res = await fetch(`http://localhost:8080/api/admin/products/${productId}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok && res.status !== 204) {
-        const error = await res.text();
-        throw new Error(error || 'Failed to delete product');
-      }
+      await productApi.remove(productId);
       return true;
     } catch (error) {
       console.error('Error deleting product:', error);

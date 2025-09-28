@@ -12,6 +12,7 @@ const OrderManagement = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [processingInvoice, setProcessingInvoice] = useState(null);
 
   useEffect(() => {
     loadOrders();
@@ -83,49 +84,107 @@ const OrderManagement = () => {
     }
   };
 
-  const handleDownloadInvoice = (order) => {
+  const handleDownloadInvoice = async (order) => {
+    setProcessingInvoice(`download-${order.id}`);
     try {
-      // Create a mock settings object for invoice generation
+      // Enhanced company settings
       const settings = {
-        companyName: "Neenu's Natural",
-        companyAddress: "123 Natural Street, Bangalore, India",
-        companyPhone: "+91 9876543210",
+        siteName: "Neenu's Natural",
+        companyAddress: "Natural & Organic Products Hub, Bangalore, India",
+        companyPhone: "+91 7892783668",
         companyEmail: "info@neenusnatural.com"
       };
       
+      // Enhanced customer data mapping with better fallbacks
       const customer = {
-        name: order.shipping?.name || order.user?.name || 'Customer',
-        email: order.user?.email || 'customer@example.com',
-        phone: order.shipping?.phone || 'N/A'
+        name: order.shipping?.name || order.customerName || order.user?.name || 'Valued Customer',
+        email: order.customerEmail || order.user?.email || order.shipping?.email || 'N/A',
+        phone: order.shipping?.phone || order.customerPhone || order.user?.phone || 'N/A'
       };
       
-      downloadInvoice(order, customer, settings);
+      // Enhanced order data with proper formatting matching backend structure
+      const enhancedOrder = {
+        ...order,
+        orderNumber: order.orderNumber || `NN-${new Date().getFullYear()}-${String(order.id).padStart(3, '0')}`,
+        customerName: customer.name,
+        customerEmail: customer.email,
+        customerPhone: customer.phone,
+        items: order.items || order.orderItems || [],
+        subtotal: order.subtotal || 0,
+        shippingFee: order.shippingFee || 0,
+        discount: order.discount || 0,
+        total: order.total || 0,
+        paymentMethod: order.paymentMethod || 'Not specified',
+        status: order.status || 'pending',
+        shipping: order.shipping || {
+          name: customer.name,
+          phone: customer.phone,
+          street: 'Address not provided',
+          city: 'N/A',
+          state: 'N/A',
+          pincode: 'N/A'
+        }
+      };
+      
+      await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay for UX
+      downloadInvoice(enhancedOrder, customer, settings);
     } catch (error) {
       console.error('Error downloading invoice:', error);
       alert('Failed to download invoice. Please try again.');
+    } finally {
+      setProcessingInvoice(null);
     }
   };
 
-  const handlePrintInvoice = (order) => {
+  const handlePrintInvoice = async (order) => {
+    setProcessingInvoice(`print-${order.id}`);
     try {
-      // Create a mock settings object for invoice generation
+      // Enhanced company settings
       const settings = {
-        companyName: "Neenu's Natural",
-        companyAddress: "123 Natural Street, Bangalore, India",
-        companyPhone: "+91 9876543210",
+        siteName: "Neenu's Natural",
+        companyAddress: "Natural & Organic Products Hub, Bangalore, India",
+        companyPhone: "+91 7892783668",
         companyEmail: "info@neenusnatural.com"
       };
       
+      // Enhanced customer data mapping with better fallbacks
       const customer = {
-        name: order.shipping?.name || order.user?.name || 'Customer',
-        email: order.user?.email || 'customer@example.com',
-        phone: order.shipping?.phone || 'N/A'
+        name: order.shipping?.name || order.customerName || order.user?.name || 'Valued Customer',
+        email: order.customerEmail || order.user?.email || order.shipping?.email || 'N/A',
+        phone: order.shipping?.phone || order.customerPhone || order.user?.phone || 'N/A'
       };
       
-      printInvoice(order, customer, settings);
+      // Enhanced order data with proper formatting matching backend structure
+      const enhancedOrder = {
+        ...order,
+        orderNumber: order.orderNumber || `NN-${new Date().getFullYear()}-${String(order.id).padStart(3, '0')}`,
+        customerName: customer.name,
+        customerEmail: customer.email,
+        customerPhone: customer.phone,
+        items: order.items || order.orderItems || [],
+        subtotal: order.subtotal || 0,
+        shippingFee: order.shippingFee || 0,
+        discount: order.discount || 0,
+        total: order.total || 0,
+        paymentMethod: order.paymentMethod || 'Not specified',
+        status: order.status || 'pending',
+        shipping: order.shipping || {
+          name: customer.name,
+          phone: customer.phone,
+          street: 'Address not provided',
+          city: 'N/A',
+          state: 'N/A',
+          pincode: 'N/A'
+        }
+      };
+      
+      await new Promise(resolve => setTimeout(resolve, 300)); // Brief delay for UX
+      printInvoice(enhancedOrder, customer, settings);
     } catch (error) {
       console.error('Error printing invoice:', error);
       alert('Failed to print invoice. Please try again.');
+    } finally {
+      setProcessingInvoice(null);
     }
   };
 
@@ -280,17 +339,35 @@ const OrderManagement = () => {
                       </select>
                       <button
                         onClick={() => handleDownloadInvoice(order)}
-                        className="p-1 text-primary hover:text-primary/80 transition-colors"
+                        disabled={processingInvoice === `download-${order.id}`}
+                        className={`p-1 transition-colors ${
+                          processingInvoice === `download-${order.id}`
+                            ? 'text-muted-foreground cursor-not-allowed'
+                            : 'text-primary hover:text-primary/80'
+                        }`}
                         title="Download Invoice"
                       >
-                        <Download className="w-4 h-4" />
+                        {processingInvoice === `download-${order.id}` ? (
+                          <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        ) : (
+                          <Download className="w-4 h-4" />
+                        )}
                       </button>
                       <button
                         onClick={() => handlePrintInvoice(order)}
-                        className="p-1 text-primary hover:text-primary/80 transition-colors"
+                        disabled={processingInvoice === `print-${order.id}`}
+                        className={`p-1 transition-colors ${
+                          processingInvoice === `print-${order.id}`
+                            ? 'text-muted-foreground cursor-not-allowed'
+                            : 'text-primary hover:text-primary/80'
+                        }`}
                         title="Print Invoice"
                       >
-                        <Printer className="w-4 h-4" />
+                        {processingInvoice === `print-${order.id}` ? (
+                          <div className="w-4 h-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        ) : (
+                          <Printer className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </td>

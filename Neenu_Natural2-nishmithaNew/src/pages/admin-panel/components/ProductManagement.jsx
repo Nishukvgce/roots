@@ -14,14 +14,31 @@ const ProductManagement = () => {
   const [showProductForm, setShowProductForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [backendStatus, setBackendStatus] = useState('checking'); // 'online', 'offline', 'checking'
+
+  // Check backend connectivity
+  const checkBackendHealth = async () => {
+    try {
+      await apiClient.get('/categories');
+      setBackendStatus('online');
+      return true;
+    } catch (error) {
+      console.warn('Backend health check failed:', error);
+      setBackendStatus('offline');
+      return false;
+    }
+  };
 
   // Helper: resolve image URL coming from backend (relative like "/admin/products/images/xxx.jpg")
   const resolveImageUrl = (p) => {
     let candidate = p?.imageUrl || p?.image || p?.image_path || p?.thumbnailUrl;
     if (!candidate) return '/assets/images/no_image.png';
     if (typeof candidate !== 'string') return '/assets/images/no_image.png';
-    // Absolute URLs or data URIs
-    if (/^(https?:)?\/\//i.test(candidate) || candidate.startsWith('data:')) return candidate;
+    
+    // Absolute URLs or data URIs - return as is
+    if (/^(https?:)?\/\//i.test(candidate) || candidate.startsWith('data:')) {
+      return candidate;
+    }
 
     // If it's an absolute OS path (Windows or Unix), extract filename
     if (/^[a-zA-Z]:\\/.test(candidate) || candidate.startsWith('\\\\') || candidate.startsWith('/') || candidate.includes('\\')) {
@@ -34,15 +51,30 @@ const ProductManagement = () => {
       candidate = `/admin/products/images/${candidate}`;
     }
 
-    const base = apiClient?.defaults?.baseURL || '';
-    return candidate.startsWith('/') ? `${base}${candidate}` : `${base}/${candidate}`;
+    const base = apiClient?.defaults?.baseURL || 'http://localhost:8080/api';
+    const fullUrl = candidate.startsWith('/') ? `${base}${candidate}` : `${base}/${candidate}`;
+    
+    // Log for debugging
+    console.log('Resolving image URL:', { original: p?.imageUrl, resolved: fullUrl });
+    
+    return fullUrl;
+  };
+
+  // Handle image load errors
+  const handleImageError = (e, productName) => {
+    console.warn(`Image failed to load for product: ${productName}`, e.target.src);
+    e.target.src = '/assets/images/no_image.png';
   };
 
   useEffect(() => {
-    loadProducts();
+    const initializeData = async () => {
+      await checkBackendHealth();
+      await loadProducts();
+    };
+    initializeData();
   }, []);
 
-  const loadProducts = async () => {
+  const loadProducts = async (retryCount = 0) => {
     try {
       setLoading(true);
       // Load products from backend API
@@ -54,7 +86,15 @@ const ProductManagement = () => {
         apiProducts = Array.isArray(response) ? response : [];
         console.log('Admin Panel: Successfully loaded products from API:', apiProducts.length);
       } catch (apiError) {
-        console.warn('Admin Panel: Backend API failed, falling back to local data:', apiError?.message);
+        console.warn('Admin Panel: Backend API failed:', apiError?.message);
+        
+        // Retry once if it's a network error and this is the first attempt
+        if (retryCount < 1 && (apiError?.message?.includes('Network Error') || apiError?.code === 'ERR_NETWORK')) {
+          console.log('Admin Panel: Retrying API call...');
+          setTimeout(() => loadProducts(retryCount + 1), 2000);
+          return;
+        }
+        
         // Fallback to hardcoded data from dataService
         const fallbackResponse = await dataService.getProducts();
         apiProducts = fallbackResponse?.data || [];
@@ -106,10 +146,40 @@ const ProductManagement = () => {
     setShowProductForm(true);
   };
 
-  const handleDeleteProduct = (productId) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      dataService.deleteProduct(productId);
-      loadProducts();
+  const handleDeleteProduct = async (productId) => {
+    const confirmMessage = 'Are you sure you want to delete this product? If this product is in any cart or has been ordered, it cannot be permanently deleted.';
+    
+    if (window.confirm(confirmMessage)) {
+      try {
+        setLoading(true);
+        await dataService.deleteProduct(productId);
+        console.log('Product deleted successfully:', productId);
+        await loadProducts(); // Reload products after successful deletion
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        
+        // Handle specific error types
+        if (error.message?.includes('foreign key constraint') || error.message?.includes('Cannot delete or update a parent row')) {
+          // Offer soft delete as alternative
+          const softDeleteConfirm = window.confirm('Cannot permanently delete this product because it is referenced in carts or orders. Would you like to mark it as inactive instead? (This will hide it from customers but keep it for historical records)');
+          
+          if (softDeleteConfirm) {
+            try {
+              await dataService.updateProduct(productId, { inStock: false, isActive: false });
+              console.log('Product marked as inactive:', productId);
+              await loadProducts();
+            } catch (updateError) {
+              alert('Failed to mark product as inactive: ' + updateError.message);
+            }
+          }
+        } else if (error.message?.includes('Internal Server Error')) {
+          alert('Server error occurred while deleting the product. Please try again or contact support.');
+        } else {
+          alert('Failed to delete product: ' + error.message);
+        }
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -141,10 +211,31 @@ const ProductManagement = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-foreground">Product Management</h1>
-          <p className="text-muted-foreground">Manage your product catalog</p>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl font-heading font-bold text-foreground">Product Management</h1>
+            <div className={`flex items-center gap-2 px-2 py-1 rounded-full text-xs ${
+              backendStatus === 'online' ? 'bg-green-100 text-green-800' : 
+              backendStatus === 'offline' ? 'bg-red-100 text-red-800' : 
+              'bg-yellow-100 text-yellow-800'
+            }`}>
+              <div className={`w-2 h-2 rounded-full ${
+                backendStatus === 'online' ? 'bg-green-600' : 
+                backendStatus === 'offline' ? 'bg-red-600' : 
+                'bg-yellow-600'
+              }`}></div>
+              <span>
+                {backendStatus === 'online' ? 'Backend Online' : 
+                 backendStatus === 'offline' ? 'Backend Offline' : 
+                 'Checking...'}
+              </span>
+            </div>
+          </div>
+          <p className="text-muted-foreground">
+            Manage your product catalog
+            {backendStatus === 'offline' && ' (Using local fallback data)'}
+          </p>
         </div>
-        <Button onClick={handleAddProduct} className="flex items-center space-x-2">
+        <Button onClick={handleAddProduct} className="flex items-center space-x-2" disabled={loading}>
           <Plus size={20} />
           <span>Add Product</span>
         </Button>
@@ -190,9 +281,7 @@ const ProductManagement = () => {
                 src={product.image}
                 alt={product.name}
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = '/assets/images/no_image.png';
-                }}
+                onError={(e) => handleImageError(e, product.name)}
               />
               <div className="absolute top-2 right-2 flex space-x-2">
                 <button
@@ -203,7 +292,8 @@ const ProductManagement = () => {
                 </button>
                 <button
                   onClick={() => handleDeleteProduct(product.id)}
-                  className="p-2 bg-card/80 backdrop-blur-sm rounded-full hover:bg-card transition-colors"
+                  disabled={loading}
+                  className="p-2 bg-card/80 backdrop-blur-sm rounded-full hover:bg-card transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Trash2 size={16} className="text-destructive" />
                 </button>

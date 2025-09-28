@@ -70,11 +70,65 @@ const ProductForm = ({ product, onSave, onCancel }) => {
     }
   }, [product]);
 
+  // Compress image before upload
+  const compressImage = (file, maxWidth = 800, maxHeight = 600, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculate new dimensions
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(resolve, 'image/jpeg', quality);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   // Handle image file selection
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageFile(file);
+      try {
+        // Check file size (limit to 5MB before compression)
+        if (file.size > 5 * 1024 * 1024) {
+          setError('Image file is too large. Please select an image smaller than 5MB.');
+          return;
+        }
+        
+        // Compress image if it's larger than 500KB
+        if (file.size > 500 * 1024) {
+          console.log('Compressing image from', (file.size / 1024).toFixed(2), 'KB');
+          const compressedFile = await compressImage(file);
+          const compressedFileObject = new File([compressedFile], file.name, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+          console.log('Compressed to', (compressedFileObject.size / 1024).toFixed(2), 'KB');
+          setImageFile(compressedFileObject);
+        } else {
+          setImageFile(file);
+        }
+      } catch (error) {
+        console.error('Error processing image:', error);
+        setError('Error processing image. Please try again.');
+      }
     }
   };
 
@@ -128,14 +182,19 @@ const ProductForm = ({ product, onSave, onCancel }) => {
 
       if (product) {
         // Edit mode: update product
-        // Preserve existing imageUrl if no new image is uploaded
-        if (!imageFile) {
-          // Try to keep the original backend-relative path if present
+        if (imageFile) {
+          // If new image is uploaded, use FormData for update
+          const form = new FormData();
+          form.append('product', new Blob([JSON.stringify(productData)], { type: 'application/json' }));
+          form.append('image', imageFile);
+          await dataService.updateProductWithImage(product.id, form);
+        } else {
+          // Preserve existing imageUrl if no new image is uploaded
           if (product?.imageUrl) {
             productData.imageUrl = product.imageUrl;
           }
+          await dataService.updateProduct(product.id, productData);
         }
-        await dataService.updateProduct(product.id, productData);
       } else {
         // Add mode: use FormData for image upload
         const form = new FormData();
@@ -145,7 +204,18 @@ const ProductForm = ({ product, onSave, onCancel }) => {
       }
       onSave();
     } catch (err) {
-      setError('Failed to save product. Please try again.');
+      console.error('Error saving product:', err);
+      
+      // Handle specific error types
+      if (err.message?.includes('413') || err.message?.includes('Content Too Large') || err.message?.includes('MaxUploadSizeExceededException')) {
+        setError('Image file is too large. Please select a smaller image or try compressing it further.');
+      } else if (err.message?.includes('Network Error') || err.message?.includes('ERR_NETWORK')) {
+        setError('Network connection error. Please check your connection and try again.');
+      } else if (err.message?.includes('500')) {
+        setError('Server error. Please try again later or contact support.');
+      } else {
+        setError(err.message || 'Failed to save product. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

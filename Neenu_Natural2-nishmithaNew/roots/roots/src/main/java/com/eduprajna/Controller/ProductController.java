@@ -1,7 +1,6 @@
 package com.eduprajna.Controller;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,7 +28,7 @@ import com.eduprajna.service.StorageService;
 
 @RestController
 @RequestMapping("/api/admin/products")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {"http://localhost:3000", "http://127.0.0.1:3000"}, allowCredentials = "true")
 
 public class ProductController {
     @Autowired

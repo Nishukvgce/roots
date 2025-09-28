@@ -15,8 +15,24 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     try {
-      const storedUser = localStorage.getItem('user');
-      const token = storedUser ? (JSON.parse(storedUser)?.token || JSON.parse(storedUser)?.accessToken) : null;
+      // Check for admin user token first (for admin panel operations)
+      const storedAdminUser = localStorage.getItem('adminUser');
+      let token = null;
+      
+      if (storedAdminUser) {
+        const adminUser = JSON.parse(storedAdminUser);
+        token = adminUser?.token || adminUser?.accessToken;
+      }
+      
+      // Fall back to regular user token if admin token not found
+      if (!token) {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          token = user?.token || user?.accessToken;
+        }
+      }
+      
       if (token) {
         config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${token}`;

@@ -5,6 +5,7 @@ import Button from '../../../components/ui/Button';
 import Image from '../../../components/AppImage';
 import { downloadInvoice, printInvoice } from '../../../utils/invoiceGenerator';
 import orderApi from '../../../services/orderApi';
+import dataService from '../../../services/dataService';
 import apiClient from '../../../services/api';
 
 const OrderHistory = () => {
@@ -14,6 +15,7 @@ const OrderHistory = () => {
   const [error, setError] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [processingInvoice, setProcessingInvoice] = useState(null);
 
   const statusOptions = [
     { value: 'all', label: 'All Orders' },
@@ -96,23 +98,107 @@ const OrderHistory = () => {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
   };
 
-  const handleDownloadInvoice = (order) => {
+  const handleDownloadInvoice = async (order) => {
+    setProcessingInvoice(`download-${order.id}`);
     try {
-      const settings = dataService.getSettings();
-      downloadInvoice(order, user, settings);
+      // Enhanced company settings
+      const settings = {
+        siteName: "Neenu's Natural",
+        companyAddress: "Natural & Organic Products Hub, Bangalore, India",
+        companyPhone: "+91 7892783668",
+        companyEmail: "info@neenusnatural.com"
+      };
+      
+      // Enhanced customer data mapping with better fallbacks
+      const customer = {
+        name: order.shipping?.name || order.customerName || user?.name || 'Valued Customer',
+        email: order.customerEmail || user?.email || 'N/A',
+        phone: order.shipping?.phone || order.customerPhone || user?.phone || 'N/A'
+      };
+      
+      // Enhanced order data with proper formatting matching backend structure
+      const enhancedOrder = {
+        ...order,
+        orderNumber: order.orderNumber || `NN-${new Date().getFullYear()}-${String(order.id).padStart(3, '0')}`,
+        customerName: customer.name,
+        customerEmail: customer.email,
+        customerPhone: customer.phone,
+        items: order.items || order.orderItems || [],
+        subtotal: order.subtotal || 0,
+        shippingFee: order.shippingFee || 0,
+        discount: order.discount || 0,
+        total: order.total || 0,
+        paymentMethod: order.paymentMethod || 'Not specified',
+        status: order.status || 'pending',
+        shipping: order.shipping || {
+          name: customer.name,
+          phone: customer.phone,
+          street: 'Address not provided',
+          city: 'N/A',
+          state: 'N/A',
+          pincode: 'N/A'
+        }
+      };
+      
+      await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay for UX
+      downloadInvoice(enhancedOrder, customer, settings);
     } catch (error) {
       console.error('Error downloading invoice:', error);
       alert('Failed to download invoice. Please try again.');
+    } finally {
+      setProcessingInvoice(null);
     }
   };
 
-  const handlePrintInvoice = (order) => {
+  const handlePrintInvoice = async (order) => {
+    setProcessingInvoice(`print-${order.id}`);
     try {
-      const settings = dataService.getSettings();
-      printInvoice(order, user, settings);
+      // Enhanced company settings
+      const settings = {
+        siteName: "Neenu's Natural",
+        companyAddress: "Natural & Organic Products Hub, Bangalore, India",
+        companyPhone: "+91 7892783668",
+        companyEmail: "info@neenusnatural.com"
+      };
+      
+      // Enhanced customer data mapping with better fallbacks
+      const customer = {
+        name: order.shipping?.name || order.customerName || user?.name || 'Valued Customer',
+        email: order.customerEmail || user?.email || 'N/A',
+        phone: order.shipping?.phone || order.customerPhone || user?.phone || 'N/A'
+      };
+      
+      // Enhanced order data with proper formatting matching backend structure
+      const enhancedOrder = {
+        ...order,
+        orderNumber: order.orderNumber || `NN-${new Date().getFullYear()}-${String(order.id).padStart(3, '0')}`,
+        customerName: customer.name,
+        customerEmail: customer.email,
+        customerPhone: customer.phone,
+        items: order.items || order.orderItems || [],
+        subtotal: order.subtotal || 0,
+        shippingFee: order.shippingFee || 0,
+        discount: order.discount || 0,
+        total: order.total || 0,
+        paymentMethod: order.paymentMethod || 'Not specified',
+        status: order.status || 'pending',
+        shipping: order.shipping || {
+          name: customer.name,
+          phone: customer.phone,
+          street: 'Address not provided',
+          city: 'N/A',
+          state: 'N/A',
+          pincode: 'N/A'
+        }
+      };
+      
+      await new Promise(resolve => setTimeout(resolve, 300)); // Brief delay for UX
+      printInvoice(enhancedOrder, customer, settings);
     } catch (error) {
       console.error('Error printing invoice:', error);
       alert('Failed to print invoice. Please try again.');
+    } finally {
+      setProcessingInvoice(null);
     }
   };
 
@@ -349,7 +435,7 @@ const OrderHistory = () => {
 
                   {/* Action Buttons */}
                   <div className="flex flex-wrap gap-2 pt-2">
-                    {order?.status?.toLowerCase() === 'delivered' && (
+                    {/* {order?.status?.toLowerCase() === 'delivered' && (
                       <Button variant="default" size="sm">
                         Reorder
                       </Button>
@@ -358,31 +444,49 @@ const OrderHistory = () => {
                       <Button variant="outline" size="sm">
                         Track Order
                       </Button>
-                    )}
-                    {order?.status?.toLowerCase() === 'processing' && (
+                    )} */}
+                    {/* {order?.status?.toLowerCase() === 'processing' && (
                       <Button variant="destructive" size="sm">
                         Cancel Order
                       </Button>
-                    )}
+                    )} */}
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleDownloadInvoice(order)}
+                      disabled={processingInvoice === `download-${order.id}`}
+                      className={processingInvoice === `download-${order.id}` ? 'opacity-50 cursor-not-allowed' : ''}
                     >
-                      Download Invoice
+                      {processingInvoice === `download-${order.id}` ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent mr-2" />
+                          Downloading...
+                        </>
+                      ) : (
+                        'Download Invoice'
+                      )}
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handlePrintInvoice(order)}
+                      disabled={processingInvoice === `print-${order.id}`}
+                      className={processingInvoice === `print-${order.id}` ? 'opacity-50 cursor-not-allowed' : ''}
                     >
-                      Print Invoice
+                      {processingInvoice === `print-${order.id}` ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent mr-2" />
+                          Printing...
+                        </>
+                      ) : (
+                        'Print Invoice'
+                      )}
                     </Button>
-                    {order?.status?.toLowerCase() === 'delivered' && (
+                    {/* {order?.status?.toLowerCase() === 'delivered' && (
                       <Button variant="outline" size="sm">
                         Return/Exchange
                       </Button>
-                    )}
+                    )} */}
                   </div>
                 </div>
               )}

@@ -223,11 +223,7 @@ const Header = ({ isLoggedIn = false, onSearch = () => {} }) => {
                       className="flex items-center space-x-1 font-body font-medium hover:text-accent-foreground/80 transition-colors duration-200 py-3"
                     >
                       <span>{item?.label}</span>
-                      <Icon
-                        name="ChevronDown"
-                        size={16}
-                        className={`transform transition-transform duration-200 ${isMegaMenuOpen ? 'rotate-180' : ''}`}
-                      />
+                      <div className="w-4 h-4"></div>
                     </button>
                   ) : (
                     <Link

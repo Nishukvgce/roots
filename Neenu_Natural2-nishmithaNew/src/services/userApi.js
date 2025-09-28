@@ -104,6 +104,49 @@ const userApi = {
     }
   },
 
+  // Update user profile
+  async updateProfile(email, profileData) {
+    try {
+      if (!email) {
+        throw new Error('User email is required');
+      }
+      if (!profileData) {
+        throw new Error('Profile data is required');
+      }
+      
+      console.log('UserAPI: Updating profile for user:', email);
+      const res = await apiClient.put('/auth/profile', profileData, { params: { email } });
+      console.log('UserAPI: Successfully updated profile for user:', email);
+      return res.data;
+    } catch (error) {
+      console.error('UserAPI: Failed to update profile for user:', email, {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
+      
+      if (error.response?.status === 400) {
+        const validationError = error.response?.data?.message || 'Invalid profile data';
+        throw new Error(validationError);
+      }
+      
+      if (error.response?.status === 404) {
+        throw new Error('User profile not found');
+      }
+      
+      if (error.response?.status === 403) {
+        throw new Error('You do not have permission to update this profile');
+      }
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          'Failed to update profile';
+      
+      throw new Error(`Unable to update profile: ${errorMessage}`);
+    }
+  },
+
   // Password update
   async updatePassword(email, payload) {
     try {

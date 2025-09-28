@@ -228,11 +228,12 @@ export const generateInvoice = (order, user, settings = {}) => {
             </div>
             <div class="ship-to">
                 <h3>Ship To:</h3>
-                <p><strong>${order.shippingAddress?.firstName} ${order.shippingAddress?.lastName}</strong></p>
-                <p>${order.shippingAddress?.address}</p>
-                ${order.shippingAddress?.apartment ? `<p>${order.shippingAddress.apartment}</p>` : ''}
-                <p>${order.shippingAddress?.city}, ${order.shippingAddress?.state} ${order.shippingAddress?.pincode}</p>
-                <p>${order.shippingAddress?.phone}</p>
+                <p><strong>${order.shipping?.name || order.customerName || user.name || 'N/A'}</strong></p>
+                <p>${order.shipping?.street || 'Address not available'}</p>
+                ${order.shipping?.landmark ? `<p>Landmark: ${order.shipping.landmark}</p>` : ''}
+                <p>${order.shipping?.city || 'N/A'}, ${order.shipping?.state || 'N/A'} - ${order.shipping?.pincode || 'N/A'}</p>
+                <p>Phone: ${order.shipping?.phone || order.customerPhone || user.phone || 'N/A'}</p>
+                ${order.shipping?.addressType ? `<p>Address Type: ${order.shipping.addressType}</p>` : ''}
             </div>
         </div>
 
@@ -246,17 +247,25 @@ export const generateInvoice = (order, user, settings = {}) => {
                 </tr>
             </thead>
             <tbody>
-                ${order.items?.map(item => `
+                ${(order.items || order.orderItems || []).map(item => {
+                  const itemName = item.product?.name || item.name || item.productName || item.title || 'Unknown Item';
+                  const itemPrice = parseFloat(item.price || item.unitPrice || 0);
+                  const itemQuantity = parseInt(item.quantity || 1);
+                  const itemTotal = itemPrice * itemQuantity;
+                  
+                  return `
                     <tr>
                         <td>
-                            <strong>${item.name}</strong>
-                            ${item.variant ? `<br><small>Variant: ${item.variant}</small>` : ''}
+                            <strong>${itemName}</strong>
+                            ${item.product?.category ? `<br><small>Category: ${item.product.category}</small>` : ''}
+                            ${item.product?.sku ? `<br><small>SKU: ${item.product.sku}</small>` : ''}
                         </td>
-                        <td>${item.quantity}</td>
-                        <td>₹${parseFloat(item.price || 0).toFixed(2)}</td>
-                        <td>₹${(parseFloat(item.price || 0) * parseInt(item.quantity || 0)).toFixed(2)}</td>
+                        <td>${itemQuantity}</td>
+                        <td>₹${itemPrice.toFixed(2)}</td>
+                        <td>₹${itemTotal.toFixed(2)}</td>
                     </tr>
-                `).join('') || ''}
+                  `;
+                }).join('') || '<tr><td colspan="4" style="text-align: center; color: #666;">No items found</td></tr>'}
             </tbody>
         </table>
 
@@ -267,7 +276,7 @@ export const generateInvoice = (order, user, settings = {}) => {
             </div>
             <div class="totals-row">
                 <span>Shipping:</span>
-                <span>${parseFloat(order.shipping || 0) === 0 ? 'Free' : `₹${parseFloat(order.shipping || 0).toFixed(2)}`}</span>
+                <span>${parseFloat(order.shippingFee || 0) === 0 ? 'Free' : `₹${parseFloat(order.shippingFee || 0).toFixed(2)}`}</span>
             </div>
             ${parseFloat(order.discount || 0) > 0 ? `
                 <div class="totals-row">
@@ -300,20 +309,40 @@ export const generateInvoice = (order, user, settings = {}) => {
 
 export const downloadInvoice = (order, user, settings = {}) => {
   const invoiceHTML = generateInvoice(order, user, settings);
+  
+  // Create a more professional filename
+  const orderNumber = order.orderNumber || `NN-${new Date().getFullYear()}-${String(order.id || order.orderId).padStart(3, '0')}`;
+  const customerName = (order.customerName || user.name || 'Customer').replace(/[^a-z0-9]/gi, '_');
+  const filename = `Invoice_${orderNumber}_${customerName}.html`;
+  
   const blob = new Blob([invoiceHTML], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `Invoice-${order.orderNumber || order.orderId}.html`;
+  link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
 };
 
 export const printInvoice = (order, user, settings = {}) => {
   const invoiceHTML = generateInvoice(order, user, settings);
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(invoiceHTML);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
+  const printWindow = window.open('', '_blank', 'width=800,height=600');
+  
+  if (printWindow) {
+    printWindow.document.write(invoiceHTML);
+    printWindow.document.close();
+    
+    // Wait for content to load before printing
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+      
+      // Close window after printing (optional)
+      printWindow.onafterprint = () => {
+        printWindow.close();
+      };
+    };
+  } else {
+    alert('Please allow pop-ups to print the invoice.');
+  }
 };

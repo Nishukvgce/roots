@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
@@ -8,6 +8,7 @@ import userApi from '../../../services/userApi';
 const ProfileManagement = ({ user, onUpdateProfile }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name,
     email: user?.email,
@@ -21,6 +22,19 @@ const ProfileManagement = ({ user, onUpdateProfile }) => {
     confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
+
+  // Update form data when user prop changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user?.name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+        dateOfBirth: user?.dateOfBirth || '',
+        gender: user?.gender || ''
+      });
+    }
+  }, [user]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -92,10 +106,21 @@ const ProfileManagement = ({ user, onUpdateProfile }) => {
     return Object.keys(newErrors)?.length === 0;
   };
 
-  const handleSaveProfile = () => {
-    if (validateForm()) {
-      onUpdateProfile(formData);
+  const handleSaveProfile = async () => {
+    if (!validateForm()) return;
+    
+    try {
+      setIsLoading(true);
+      setErrors({});
+      
+      await onUpdateProfile(formData);
       setIsEditing(false);
+      
+    } catch (error) {
+      console.error('Profile update failed:', error);
+      setErrors({ submit: error.message || 'Failed to update profile. Please try again.' });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -116,14 +141,20 @@ const ProfileManagement = ({ user, onUpdateProfile }) => {
 
   const handleCancel = () => {
     setFormData({
-      name: user?.name,
-      email: user?.email,
-      phone: user?.phone,
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
       dateOfBirth: user?.dateOfBirth || '',
       gender: user?.gender || ''
     });
+    setPasswordData({ 
+      currentPassword: '', 
+      newPassword: '', 
+      confirmPassword: '' 
+    });
     setIsEditing(false);
     setIsChangingPassword(false);
+    setIsLoading(false);
     setErrors({});
   };
 
@@ -226,19 +257,28 @@ const ProfileManagement = ({ user, onUpdateProfile }) => {
         </div>
 
         {isEditing && (
-          <div className="flex space-x-3 mt-6 pt-6 border-t border-border">
-            <Button
-              variant="default"
-              onClick={handleSaveProfile}
-            >
-              Save Changes
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-            >
-              Cancel
-            </Button>
+          <div className="mt-6 pt-6 border-t border-border">
+            {errors.submit && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{errors.submit}</p>
+              </div>
+            )}
+            <div className="flex space-x-3">
+              <Button
+                variant="default"
+                onClick={handleSaveProfile}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Saving...' : 'Save Changes'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
         )}
       </div>

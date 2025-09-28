@@ -347,12 +347,28 @@ const UserAccountDashboard = () => {
     setIsMobileSidebarOpen(false);
   };
 
-  const handleUpdateProfile = (updatedData) => {
-    setUser(prev => ({
-      ...prev,
-      ...updatedData
-    }));
-    console.log('Profile updated:', updatedData);
+  const handleUpdateProfile = async (updatedData) => {
+    try {
+      console.log('Updating profile with data:', updatedData);
+      
+      // Save to database via API
+      const updatedProfile = await userApi.updateProfile(authUser.email, updatedData);
+      
+      // Update local state with the response from server
+      setUser(prev => ({
+        ...prev,
+        ...updatedProfile
+      }));
+      
+      console.log('Profile updated successfully:', updatedProfile);
+      
+      // Show success message
+      alert('Profile updated successfully!');
+      
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      alert('Failed to update profile: ' + error.message);
+    }
   };
 
   const handleAddAddress = async (addressData) => {

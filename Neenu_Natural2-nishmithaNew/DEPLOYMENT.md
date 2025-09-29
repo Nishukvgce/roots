@@ -29,43 +29,30 @@ Your frontend is now configured for Vercel deployment with the `vercel.json` con
 - **installCommand**: `cd frontend && npm install` - Installs dependencies in the frontend directory
 - **rewrites**: Configures client-side routing for React Router
 
-## Backend Deployment Options
+## Backend & Database Deployment
 
-Your Spring Boot backend needs to be deployed separately. Consider these options:
+**📖 For comprehensive backend and database hosting instructions, see [BACKEND_HOSTING_GUIDE.md](./BACKEND_HOSTING_GUIDE.md)**
 
-### 1. Railway (Recommended)
-- Simple to deploy Spring Boot apps
-- Automatic database setup
-- Environment variable management
+### Quick Start with Railway (Recommended):
 
-### 2. Render
-- Free tier available
-- PostgreSQL database included
-- Good for Spring Boot apps
-
-### 3. Heroku
-- Well-documented Spring Boot deployment
-- PostgreSQL add-on available
-
-### 4. Railway Deployment Steps:
-1. Create account on Railway.app
-2. Connect your GitHub repository
-3. Select the `backend` folder as the source
-4. Add environment variables for database connection
-5. Deploy and get your backend URL
-6. Update `VITE_API_BASE_URL` in Vercel with the Railway URL
+1. **Windows Users**: Run `./deploy-backend.ps1`
+2. **Mac/Linux Users**: Run `./deploy-backend.sh`
+3. **Manual Setup**: Follow the detailed guide in `BACKEND_HOSTING_GUIDE.md`
 
 ## Current Build Status
 
 ✅ Frontend builds successfully locally
 ✅ Vercel configuration added
+✅ Backend production configuration ready
+✅ Public API endpoints created
 ⏳ Backend deployment needed
 ⏳ Environment variables configuration needed
 
 ## Next Steps
 
-1. Deploy your Spring Boot backend to Railway/Render/Heroku
-2. Update the `VITE_API_BASE_URL` environment variable in Vercel
-3. Test the full application flow
+1. **Deploy Backend**: Use Railway, Render, or Heroku (see `BACKEND_HOSTING_GUIDE.md`)
+2. **Setup Database**: MySQL or PostgreSQL (auto-configured with Railway)
+3. **Update Environment Variables**: Configure both Vercel and backend platform
+4. **Test Integration**: Verify frontend can connect to deployed backend
 
-Your deployment should now work with the new Vercel configuration!
+Your deployment should now work with the new configuration!

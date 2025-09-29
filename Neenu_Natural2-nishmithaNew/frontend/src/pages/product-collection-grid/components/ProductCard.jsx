@@ -64,7 +64,7 @@ const ProductCard = ({
       return;
     }
     const cartItem = {
-      id: `${product.id}-default`,
+      id: product.id, // Use numeric ID for consistency
       productId: product.id,
       name: product.name,
       price: product.price,
@@ -90,7 +90,7 @@ const ProductCard = ({
     }
 
     const cartItem = {
-      id: `${product.id}-${selectedVariant.id}`, // Unique ID for each variant
+      id: product.id, // Use numeric ID for consistency
       productId: product.id,
       name: product.name,
       price: selectedVariant.salePrice || selectedVariant.price,
@@ -106,9 +106,9 @@ const ProductCard = ({
   };
 
   return (
-    <div className="group bg-card rounded-lg border border-border hover:shadow-warm-md transition-all duration-300 overflow-hidden">
+    <div className="group bg-card rounded-lg border border-border hover:shadow-warm-md transition-all duration-300 overflow-hidden h-full flex flex-col">
       {/* Product Image */}
-      <div className="relative aspect-square overflow-hidden bg-muted">
+      <div className="relative aspect-square overflow-hidden bg-muted flex-shrink-0">
         <Link to={`/product-detail-page?id=${product?.id}`}>
           <Image
             src={product?.image}
@@ -136,7 +136,7 @@ const ProductCard = ({
             </span>
           ))}
           {savings > 0 && (
-            <span className="bg-success text-success-foreground text-xs font-caption font-bold px-2 py-1 rounded-full">
+            <span className="bg-destructive text-destructive-foreground text-xs font-caption font-bold px-2 py-1 rounded-full">
               {savings}% OFF
             </span>
           )}
@@ -170,10 +170,10 @@ const ProductCard = ({
         </div>
       </div>
       {/* Product Info */}
-      <div className="p-4 space-y-3">
+      <div className="p-4 space-y-3 flex-grow flex flex-col">
         {/* Product Name */}
         <Link to={`/product-detail-page?id=${product?.id}`}>
-          <h3 className="font-body font-medium text-foreground hover:text-primary transition-colors duration-200 line-clamp-2">
+          <h3 className="font-body font-medium text-foreground hover:text-primary transition-colors duration-200 line-clamp-2 min-h-[2.5rem]">
             {product?.name}
           </h3>
         </Link>
@@ -188,64 +188,68 @@ const ProductCard = ({
           </span>
         </div>
 
-        {/* Variant Selection */}
-        {product?.variants && product?.variants?.length > 1 && (
-          <div className="space-y-2">
-            <span className="font-caption text-xs text-muted-foreground">Weight:</span>
-            <div className="flex flex-wrap gap-1">
-              {product?.variants?.map((variant, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedVariant(variant)}
-                  className={`px-2 py-1 text-xs font-caption rounded border transition-colors duration-200 ${
-                    selectedVariant?.weight === variant?.weight
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-border bg-background text-foreground hover:border-primary'
-                  }`}
-                >
-                  {variant?.weight}
-                </button>
-              ))}
+        <div className="flex-grow space-y-3">
+          {/* Variant Selection */}
+          {product?.variants && product?.variants?.length > 1 && (
+            <div className="space-y-2">
+              <span className="font-caption text-xs text-muted-foreground">Weight:</span>
+              <div className="flex flex-wrap gap-1">
+                {product?.variants?.map((variant, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedVariant(variant)}
+                    className={`px-2 py-1 text-xs font-caption rounded border transition-colors duration-200 ${
+                      selectedVariant?.weight === variant?.weight
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-background text-foreground hover:border-primary'
+                    }`}
+                  >
+                    {variant?.weight}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Price */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="font-data font-bold text-lg text-foreground">
-              ₹{(parseFloat(selectedVariant?.salePrice || selectedVariant?.price || product?.salePrice || product?.price) || 0).toFixed(2)}
-            </span>
-            {originalPrice && originalPrice > currentPrice && (
-              <>
+          {/* Price */}
+          <div className="space-y-2">
+            <div className="flex items-baseline gap-2">
+              <span className="font-data font-bold text-lg text-foreground">
+                ₹{(parseFloat(selectedVariant?.salePrice || selectedVariant?.price || product?.salePrice || product?.price) || 0).toFixed(2)}
+              </span>
+              {originalPrice && originalPrice > currentPrice && (
                 <span className="font-data text-sm text-muted-foreground line-through">
                   ₹{originalPrice?.toFixed(2)}
                 </span>
-                <span className="font-caption text-xs font-medium text-success bg-success/10 px-2 py-1 rounded">
+              )}
+            </div>
+            {savings > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="font-caption text-xs font-medium text-success bg-success/10 px-2 py-0.5 rounded-full">
                   {Math.round(((originalPrice - currentPrice) / originalPrice) * 100)}% OFF
                 </span>
-              </>
+                <p className="font-caption text-xs text-success font-medium">
+                  You save ₹{(originalPrice - currentPrice)?.toFixed(2)}
+                </p>
+              </div>
             )}
           </div>
-          {savings > 0 && (
-            <p className="font-caption text-xs text-success">
-              You save ₹{(originalPrice - currentPrice)?.toFixed(2)}
-            </p>
-          )}
         </div>
 
         {/* Add to Cart Button */}
-        <Button
-          variant="default"
-          fullWidth
-          onClick={selectedVariant ? handleAddToCartWithVariant : handleAddToCart}
-          disabled={!inStock}
-          iconName="ShoppingCart"
-          iconPosition="left"
-          iconSize={16}
-        >
-          {inStock ? 'Add to Cart' : 'Out of Stock'}
-        </Button>
+        <div className="mt-auto">
+          <Button
+            variant="default"
+            fullWidth
+            onClick={selectedVariant ? handleAddToCartWithVariant : handleAddToCart}
+            disabled={!inStock}
+            iconName="ShoppingCart"
+            iconPosition="left"
+            iconSize={16}
+          >
+            {inStock ? 'Add to Cart' : 'Out of Stock'}
+          </Button>
+        </div>
       </div>
     </div>
   );

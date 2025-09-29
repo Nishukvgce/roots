@@ -163,21 +163,31 @@ export const CartProvider = ({ children }) => {
       }
     }
 
+    // Extract numeric product ID from composite IDs like "2-default"
+    const getNumericProductId = (id) => {
+      if (typeof id === 'string' && id.includes('-')) {
+        return parseInt(id.split('-')[0]);
+      }
+      return parseInt(id);
+    };
+
+    const productId = getNumericProductId(sanitizedProduct.productId || sanitizedProduct.id);
+
     if (user?.email) {
       try {
         const apiResponse = await cartApi.add(user.email, {
-          productId: sanitizedProduct.productId || sanitizedProduct.id,
+          productId: productId,
           quantity: sanitizedProduct.quantity,
         });
 
         setCartItems((prev) => {
           const existingItem = prev.find(
-            (item) => item.id === (sanitizedProduct.productId || sanitizedProduct.id)
+            (item) => getNumericProductId(item.id) === productId
           );
           if (existingItem) {
             showNotification(`Updated ${sanitizedProduct.name} quantity in cart!`);
             return prev.map((item) =>
-              item.id === (sanitizedProduct.productId || sanitizedProduct.id)
+              getNumericProductId(item.id) === productId
                 ? {
                     ...item,
                     quantity: apiResponse.quantity,
@@ -212,7 +222,7 @@ export const CartProvider = ({ children }) => {
     } else {
       // Guest user
       setCartItems((prev) => {
-        const existingItem = prev.find((item) => item.id === sanitizedProduct.id);
+        const existingItem = prev.find((item) => getNumericProductId(item.id) === productId);
         const currentQty = existingItem ? parseInt(existingItem.quantity) || 0 : 0;
         const requestedQty = parseInt(quantity) || 1;
         let newQty = currentQty + requestedQty;
@@ -224,7 +234,7 @@ export const CartProvider = ({ children }) => {
         if (existingItem) {
           showNotification(`Updated ${sanitizedProduct.name} quantity in cart!`);
           return prev.map((item) =>
-            item.id === sanitizedProduct.id ? { ...item, quantity: newQty } : item
+            getNumericProductId(item.id) === productId ? { ...item, quantity: newQty } : item
           );
         } else {
           showNotification(`${sanitizedProduct.name} added to cart!`);
@@ -232,6 +242,7 @@ export const CartProvider = ({ children }) => {
             ...prev,
             {
               ...sanitizedProduct,
+              id: productId, // Use numeric ID for consistency
               quantity: Math.max(1, Math.min(requestedQty, availableStock ?? requestedQty)),
             },
           ];
@@ -245,21 +256,42 @@ export const CartProvider = ({ children }) => {
       removeFromCart(itemId);
       return;
     }
+    
+    // Extract numeric product ID from composite IDs like "2-default"
+    const getNumericProductId = (id) => {
+      if (typeof id === 'string' && id.includes('-')) {
+        return parseInt(id.split('-')[0]);
+      }
+      return parseInt(id);
+    };
+    
+    const productId = getNumericProductId(itemId);
+    
     setCartItems((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, quantity: newQuantity } : item))
+      prev.map((item) => (getNumericProductId(item.id) === productId ? { ...item, quantity: newQuantity } : item))
     );
     if (user?.email) {
       try {
-        await cartApi.update(user.email, { productId: itemId, quantity: newQuantity });
+        await cartApi.update(user.email, { productId: productId, quantity: newQuantity });
       } catch {}
     }
   };
 
   const removeFromCart = async (itemId) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+    // Extract numeric product ID from composite IDs like "2-default"
+    const getNumericProductId = (id) => {
+      if (typeof id === 'string' && id.includes('-')) {
+        return parseInt(id.split('-')[0]);
+      }
+      return parseInt(id);
+    };
+    
+    const productId = getNumericProductId(itemId);
+    
+    setCartItems((prev) => prev.filter((item) => getNumericProductId(item.id) !== productId));
     if (user?.email) {
       try {
-        await cartApi.remove(user.email, { productId: itemId });
+        await cartApi.remove(user.email, { productId: productId });
       } catch {}
     }
   };

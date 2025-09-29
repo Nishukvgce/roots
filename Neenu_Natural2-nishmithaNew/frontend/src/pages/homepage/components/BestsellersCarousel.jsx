@@ -267,10 +267,10 @@ const BestsellersCarousel = ({ onAddToCart }) => {
                 {bestsellers?.slice(slideIndex * itemsPerSlide?.desktop, (slideIndex + 1) * itemsPerSlide?.desktop)?.map((product) => (
                     <div
                       key={product?.id}
-                      className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-warm-lg transition-all duration-300 hover:-translate-y-1"
+                      className="group bg-card border border-border rounded-xl overflow-hidden hover:shadow-warm-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col"
                     >
                       {/* Product Image */}
-                      <div className="relative aspect-square overflow-hidden">
+                      <div className="relative aspect-square overflow-hidden flex-shrink-0">
                         <Link to={`/product-detail-page?id=${product?.id}`}>
                           <Image
                             src={product?.image}
@@ -313,9 +313,9 @@ const BestsellersCarousel = ({ onAddToCart }) => {
                       </div>
 
                       {/* Product Info */}
-                      <div className="p-4">
+                      <div className="p-4 flex-grow flex flex-col">
                         <Link to={`/product-detail-page?id=${product?.id}`}>
-                          <h3 className="font-body font-semibold text-sm lg:text-base text-foreground mb-2 line-clamp-2 hover:text-primary transition-colors duration-200">
+                          <h3 className="font-body font-semibold text-sm lg:text-base text-foreground mb-2 line-clamp-2 hover:text-primary transition-colors duration-200 min-h-[2.5rem] flex items-start">
                             {product?.name}
                           </h3>
                         </Link>
@@ -343,29 +343,38 @@ const BestsellersCarousel = ({ onAddToCart }) => {
                         </p>
 
                         {/* Price */}
-                        <div className="flex items-center space-x-2 mb-3">
-                          <span className="font-data font-bold text-base text-foreground">
-                            ₹{product?.salePrice || product?.price}
-                          </span>
-                          {calculateSavings(product?.originalPrice, product?.salePrice) > 0 && (
-                            <span className="font-data text-sm text-muted-foreground line-through">
-                              ₹{product?.originalPrice}
+                        <div className="space-y-1 mb-3 flex-grow">
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-data font-bold text-base text-foreground">
+                              ₹{(parseFloat(product?.salePrice || product?.price) || 0).toFixed(2)}
                             </span>
+                            {calculateSavings(product?.originalPrice, product?.salePrice) > 0 && (
+                              <span className="font-data text-sm text-muted-foreground line-through">
+                                ₹{(parseFloat(product?.originalPrice) || 0).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                          {calculateSavings(product?.originalPrice, product?.salePrice) > 0 && (
+                            <p className="font-caption text-xs text-success font-medium">
+                              You save ₹{((parseFloat(product?.originalPrice) || 0) - (parseFloat(product?.salePrice || product?.price) || 0)).toFixed(2)}
+                            </p>
                           )}
                         </div>
 
                         {/* Add to Cart Button */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          fullWidth
-                          onClick={() => handleQuickAdd(product)}
-                          iconName="ShoppingCart"
-                          iconPosition="left"
-                          iconSize={14}
-                        >
-                          Add to Cart
-                        </Button>
+                        <div className="mt-auto">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            fullWidth
+                            onClick={() => handleQuickAdd(product)}
+                            iconName="ShoppingCart"
+                            iconPosition="left"
+                            iconSize={14}
+                          >
+                            Add to Cart
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}

@@ -1,107 +1,150 @@
-# React
+# Neenu's Natural - E-commerce Platform
 
-A modern React-based project utilizing the latest frontend technologies and tools for building responsive web applications.
+A full-stack e-commerce application for organic products with React frontend and Spring Boot backend.
 
-## 🚀 Features
+## 🏗️ Project Structure
 
-- **React 18** - React version with improved rendering and concurrent features
+This project is now organized into two main directories:
+
+```
+├── frontend/          # React.js frontend application
+├── backend/           # Spring Boot REST API backend
+├── attached_assets/   # Project assets and documentation
+└── README.md         # This file
+```
+
+## 🚀 Technology Stack
+
+### Frontend (React)
+- **React 18** - Modern React with hooks and context
 - **Vite** - Lightning-fast build tool and development server
-- **Redux Toolkit** - State management with simplified Redux setup
-- **TailwindCSS** - Utility-first CSS framework with extensive customization
-- **React Router v6** - Declarative routing for React applications
-- **Data Visualization** - Integrated D3.js and Recharts for powerful data visualization
-- **Form Management** - React Hook Form for efficient form handling
-- **Animation** - Framer Motion for smooth UI animations
-- **Testing** - Jest and React Testing Library setup
+- **TailwindCSS** - Utility-first CSS framework
+- **React Router v6** - Declarative routing
+- **Context API** - State management for cart and auth
+
+### Backend (Spring Boot)
+- **Spring Boot 3.5.5** - Java framework
+- **Spring Data JPA** - Database persistence
+- **MySQL** - Relational database
+- **Spring Security** - Authentication and authorization
+- **Maven** - Dependency management
 
 ## 📋 Prerequisites
 
+### Frontend
 - Node.js (v14.x or higher)
 - npm or yarn
 
-## 🛠️ Installation
+### Backend
+- Java 17 or higher
+- Maven 3.6 or higher
+- MySQL 8.0 or higher
 
-1. Install dependencies:
-   ```bash
-   npm install
-   # or
-   yarn install
-   ```
-   
-2. Start the development server:
-   ```bash
-   npm start
-   # or
-   yarn start
-   ```
+## 🛠️ Quick Start
 
-## 📁 Project Structure
-
-```
-react_app/
-├── public/             # Static assets
-├── src/
-│   ├── components/     # Reusable UI components
-│   ├── pages/          # Page components
-│   ├── styles/         # Global styles and Tailwind configuration
-│   ├── App.jsx         # Main application component
-│   ├── Routes.jsx      # Application routes
-│   └── index.jsx       # Application entry point
-├── .env                # Environment variables
-├── index.html          # HTML template
-├── package.json        # Project dependencies and scripts
-├── tailwind.config.js  # Tailwind CSS configuration
-└── vite.config.js      # Vite configuration
-```
-
-## 🧩 Adding Routes
-
-To add new routes to the application, update the `Routes.jsx` file:
-
-```jsx
-import { useRoutes } from "react-router-dom";
-import HomePage from "pages/HomePage";
-import AboutPage from "pages/AboutPage";
-
-const ProjectRoutes = () => {
-  let element = useRoutes([
-    { path: "/", element: <HomePage /> },
-    { path: "/about", element: <AboutPage /> },
-    // Add more routes as needed
-  ]);
-
-  return element;
-};
-```
-
-## 🎨 Styling
-
-This project uses Tailwind CSS for styling. The configuration includes:
-
-- Forms plugin for form styling
-- Typography plugin for text styling
-- Aspect ratio plugin for responsive elements
-- Container queries for component-specific responsive design
-- Fluid typography for responsive text
-- Animation utilities
-
-## 📱 Responsive Design
-
-The app is built with responsive design using Tailwind CSS breakpoints.
-
-
-## 📦 Deployment
-
-Build the application for production:
-
+### 1. Setup Backend
 ```bash
-npm run build
+cd backend
+# Configure MySQL database and update application.properties
+mvn spring-boot:run
 ```
 
-## 🙏 Acknowledgments
+### 2. Setup Frontend  
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-- Built with [Rocket.new](https://rocket.new)
-- Powered by React and Vite
-- Styled with Tailwind CSS
+### 3. Access the Application
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8080/api
+- **Admin Panel**: http://localhost:3000/admin-panel
 
-Built with ❤️ on Rocket.new
+## 🔧 Detailed Setup
+
+For detailed installation and configuration instructions, see:
+- [Frontend Setup Guide](./frontend/README.md)
+- [Backend Setup Guide](./backend/README.md)
+
+## ✨ Features
+
+### Customer Features
+- **Product Catalog** - Browse organic products with filtering and search
+- **Product Details** - Detailed product information, ingredients, and benefits
+- **Shopping Cart** - Add products to cart and manage quantities
+- **User Authentication** - Account creation and login
+- **User Dashboard** - Order history, wishlist, and profile management
+- **Checkout Process** - Complete order placement with address management
+- **Responsive Design** - Works seamlessly on desktop and mobile
+
+### Admin Features
+- **Admin Dashboard** - Overview of orders, products, and analytics
+- **Product Management** - Add, edit, delete products with image upload
+- **Order Management** - Process orders, update status, generate invoices
+- **User Management** - View and manage customer accounts
+- **Inventory Management** - Track product stock and availability
+
+### Technical Features
+- **RESTful API** - Complete backend API with proper HTTP methods
+- **Database Integration** - MySQL database with JPA/Hibernate
+- **File Upload** - Image upload and storage for products  
+- **CORS Support** - Frontend-backend communication
+- **Error Handling** - Proper error responses and validation
+- **Transaction Management** - Database transaction safety
+
+## 📱 Application Pages
+
+### Public Pages
+- **Homepage** (`/`) - Featured products and categories
+- **Product Catalog** (`/product-collection-grid`) - Product listing with filters
+- **Product Detail** (`/product-detail-page`) - Individual product information
+- **Shopping Cart** (`/shopping-cart`) - Cart management
+- **Checkout** (`/checkout-process`) - Order placement process
+- **User Auth** (`/user-auth`) - Login and registration
+
+### User Dashboard (`/user-account-dashboard`)
+- Account overview and quick actions
+- Order history and tracking
+- Wishlist management
+- Address book
+- Account preferences and settings
+
+### Admin Panel (`/admin-panel`) 
+- Dashboard with analytics and overview
+- Product management (CRUD operations)
+- Order management and processing
+- User account management
+- System settings
+
+## 🚀 Development
+
+### Frontend Development
+```bash
+cd frontend
+npm run dev          # Start development server
+npm run build        # Build for production  
+npm run preview      # Preview production build
+```
+
+### Backend Development  
+```bash
+cd backend
+mvn spring-boot:run  # Start Spring Boot server
+mvn test             # Run tests
+mvn clean package    # Build JAR file
+```
+
+## �️ Database Schema
+
+The application uses MySQL with the following main entities:
+- **Product** - Product catalog with details and inventory
+- **User** - Customer accounts and authentication  
+- **Order & OrderItem** - Order management and line items
+- **CartItem** - Shopping cart persistence
+- **WishlistItem** - User wishlist functionality
+- **Address** - Customer shipping addresses
+
+## 📄 License
+
+This project is licensed under the MIT License.

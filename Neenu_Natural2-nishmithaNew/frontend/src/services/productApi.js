@@ -4,7 +4,7 @@ const productApi = {
   async getAll(params = {}) {
     try {
       console.log('ProductAPI: Fetching all products with params:', params);
-      const res = await apiClient.get('/public/products', { params });
+      const res = await apiClient.get('/admin/products', { params });
       console.log('ProductAPI: Successfully fetched products:', res.data?.length || 0);
       return res.data;
     } catch (error) {
@@ -31,7 +31,7 @@ const productApi = {
       }
       
       console.log('ProductAPI: Fetching product by ID:', productId);
-      const res = await apiClient.get(`/public/products/${productId}`);
+      const res = await apiClient.get(`/admin/products/${productId}`);
       console.log('ProductAPI: Successfully fetched product:', res.data?.name || res.data?.id);
       return res.data;
     } catch (error) {

@@ -149,7 +149,7 @@ I've analyzed your code - everything is properly configured! Here's what you hav
    - SPRING_DATASOURCE_USERNAME: `user123`
    - SPRING_DATASOURCE_PASSWORD: `pass456`
 
----
+---postgresql://@dpg-d3ee6bogjchc738k69pg-a.oregon-postgres.render.com/neenu_natural
 
 ### **STEP 6: Deploy & Monitor (5 minutes)**
 
